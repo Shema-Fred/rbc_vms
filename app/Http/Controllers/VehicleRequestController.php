@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Vehicle;
 use App\Models\VehicleRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class VehicleRequestController extends Controller
 {
@@ -16,7 +18,7 @@ class VehicleRequestController extends Controller
     {
         $vehicleRequests = VehicleRequest::latest()->paginate(10);
 
-        return view('vehicleRequests.index', compact('vehicleRequests'));
+        return view('vehicleRequest.index', compact('vehicleRequests'));
     }
 
     /**
@@ -26,7 +28,7 @@ class VehicleRequestController extends Controller
      */
     public function create()
     {
-        return view('vehicleRequests.create');
+        return view('vehicleRequest.create');
     }
 
     /**
@@ -38,16 +40,19 @@ class VehicleRequestController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => ['required', 'integer'],
-            'destination' => ['required', 'date'],
+            'destination' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:255'],
         ]);
 
+        $user = request()->user();
+
         $vehicleRequest = new VehicleRequest();
-        $vehicleRequest->user_id = $request->user_id;
+        $vehicleRequest->user_id = $user->id;
+        $vehicleRequest->description = $request->description;
         $vehicleRequest->destination = $request->destination;
         $vehicleRequest->save();
 
-        return redirect()->route('vehicleRequests.index')->with('message', 'Vehicle Request created successfully.');
+        return redirect()->route('vehicleRequest.index')->with('message', 'Vehicle requested successfully.');
     }
 
     /**
@@ -58,7 +63,7 @@ class VehicleRequestController extends Controller
      */
     public function show($vehicleRequest)
     {
-        return redirect()->route('vehicleRequests.index');
+        return redirect()->route('vehicleRequest.index');
     }
 
     /**
@@ -69,7 +74,9 @@ class VehicleRequestController extends Controller
      */
     public function edit(VehicleRequest $vehicleRequest)
     {
-        return view('vehicleRequests.edit', compact('vehicleRequest'));
+        $vehicles = Vehicle::whereDoesntHave('vehicleRequests')->latest()->get();
+
+        return view('vehicleRequest.edit', compact('vehicleRequest', 'vehicles'));
     }
 
     /**
@@ -81,18 +88,33 @@ class VehicleRequestController extends Controller
      */
     public function update(Request $request, VehicleRequest $vehicleRequest)
     {
-        $request->validate([
-            'vehicle_id' => ['required', 'integer'],
-            'deadline' => ['required', 'date'],
-            'status' => ['required', 'string'],
-        ]);
+        $user = Auth::user();
+        if ($user->hasRole('admin')) {
+            $request->validate([
+                'vehicle_id' => ['sometimes', 'required', 'integer', 'exists:vehicles,id'],
+                'status' => ['required', 'string'],
+                'deadline' => ['required', 'date_format:d-m-Y H:i'],
+            ]);
+            $vehicleRequest->vehicle_id = $request->vehicle_id ?? $vehicleRequest->vehicle_id ?? null;
+            $vehicleRequest->deadline = $request->deadline;
+            $vehicleRequest->status = $request->status;
+            $vehicleRequest->save();
+        } else if ($user->hasRole('staff')) {
+            $request->validate([
+                'destination' => ['required', 'string', 'max:255'],
+                'description' => ['required', 'string', 'max:255'],
+            ]);
 
-        $vehicleRequest->vehicle_id = $request->vehicle_id;
-        $vehicleRequest->deadline = $request->deadline;
-        $vehicleRequest->status = $request->status;
-        $vehicleRequest->save();
+            $vehicleRequest->user_id = $user->id;
+            $vehicleRequest->description = $request->description;
+            $vehicleRequest->destination = $request->destination;
+            $vehicleRequest->save();
+        } else {
+            return redirect()->route('vehicleRequest.index')->with('message', 'You are not authorized to perform this action.');
+        }
 
-        return redirect()->route('vehicleRequests.index')->with('message', 'Vehicle Request updated successfully.');
+
+        return redirect()->route('vehicleRequest.index')->with('message', 'Vehicle Request updated successfully.');
     }
 
     /**
@@ -104,11 +126,11 @@ class VehicleRequestController extends Controller
     public function destroy(VehicleRequest $vehicleRequest)
     {
         if (!$vehicleRequest) {
-            return redirect()->route('vehicleRequests.index')->with('message', 'Vehicle Request not found.');
+            return redirect()->route('vehicleRequest.index')->with('message', 'Vehicle Request not found.');
         }
 
         $vehicleRequest->delete();
 
-        return redirect()->route('vehicleRequests.index')->with('message', 'Vehicle Request deleted successfully.');
+        return redirect()->route('vehicleRequest.index')->with('message', 'Vehicle Request deleted successfully.');
     }
 }

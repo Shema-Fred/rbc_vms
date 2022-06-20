@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -16,7 +17,7 @@ class UserController extends Controller
     {
         $users = User::latest()->paginate(10);
 
-        return view('users.index', compact('users'));
+        return view('user.index', compact('users'));
     }
 
     /**
@@ -26,7 +27,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('users.create');
+        return view('user.create');
     }
 
     /**
@@ -41,17 +42,19 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'phone' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'confirmed'],
+            'password' => ['required', 'string', 'min:5'],
+            'role' => ['required', 'string', 'max:255'],
         ]);
 
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
         $user->phone = $request->phone;
+        $user->role = $request->role;
         $user->password = Hash::make($request->password);
         $user->save();
 
-        return redirect()->route('users.index')->with('message', 'User created successfully.');
+        return redirect()->route('user.index')->with('message', 'User created successfully.');
     }
 
     /**
@@ -62,7 +65,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return redirect()->route('users.index');
+        return redirect()->route('user.index');
     }
 
     /**
@@ -73,7 +76,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        return view('user.edit', compact('user'));
     }
 
     /**
@@ -89,20 +92,20 @@ class UserController extends Controller
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => ['string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'phone' => ['sometimes', 'required', 'string', 'max:255'],
-            'password' => ['sometimes', 'required', 'confirmed'],
         ]);
 
         if (!$user) {
-            return redirect()->route('users.index')->with('message', 'User not found.');
+            return redirect()->route('user.index')->with('message', 'User not found.');
         }
 
         $user->name = $request->name ?? $user->name;
         $user->email = $request->email ?? $user->email;
         $user->phone = $request->phone ?? $user->phone;
+        $user->role = $request->role ?? $user->role;
         $user->password = $request->password ? Hash::make($request->password) : $user->password;
         $user->save();
 
-        return redirect()->route('users.index')->with('message', 'User updated successfully.');
+        return redirect()->route('user.index')->with('message', 'User updated successfully.');
     }
 
     /**
@@ -114,11 +117,11 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         if (!$user) {
-            return redirect()->route('users.index')->with('message', 'User not found.');
+            return redirect()->route('user.index')->with('message', 'User not found.');
         }
 
         $user->delete();
 
-        return redirect()->route('users.index')->with('message', 'User deleted successfully.');
+        return redirect()->route('user.index')->with('message', 'User deleted successfully.');
     }
 }

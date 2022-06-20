@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('description');
             $table->string('destination');
-            $table->date('deadline')->nullable();
+            $table->dateTime('deadline')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
         });

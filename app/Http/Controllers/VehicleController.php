@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,7 @@ class VehicleController extends Controller
     {
         $vehicles = Vehicle::latest()->paginate(10);
 
-        return view('vehicles.index', compact('vehicles'));
+        return view('vehicle.index', compact('vehicles'));
     }
 
     /**
@@ -26,7 +27,8 @@ class VehicleController extends Controller
      */
     public function create()
     {
-        return view('vehicles.create');
+        $drivers = User::where('role', 'driver')->latest()->get();
+        return view('vehicle.create', compact('drivers'));
     }
 
     /**
@@ -49,7 +51,7 @@ class VehicleController extends Controller
         $vehicle->driver_id = $request->driver_id;
         $vehicle->save();
 
-        return redirect()->route('vehicles.index')->with('message', 'Vehicle created successfully.');
+        return redirect()->route('vehicle.index')->with('message', 'Vehicle created successfully.');
     }
 
     /**
@@ -60,7 +62,7 @@ class VehicleController extends Controller
      */
     public function show($vehicle)
     {
-        return view('vehicles.show', compact('vehicle'));
+        return view('vehicle.show', compact('vehicle'));
     }
 
     /**
@@ -71,7 +73,8 @@ class VehicleController extends Controller
      */
     public function edit(Vehicle $vehicle)
     {
-        return view('vehicles.edit', compact('vehicle'));
+        $drivers = User::where('role', 'driver')->latest()->get();
+        return view('vehicle.edit', compact('vehicle', 'drivers'));
     }
 
     /**
@@ -90,7 +93,7 @@ class VehicleController extends Controller
         ]);
 
         if (!$vehicle) {
-            return redirect()->route('vehicles.index')->with('message', 'Vehicle not found.');
+            return redirect()->route('vehicle.index')->with('message', 'Vehicle not found.');
         }
 
         $vehicle->name = $request->name ?? $vehicle->name;
@@ -98,7 +101,7 @@ class VehicleController extends Controller
         $vehicle->driver_id = $request->driver_id ?? $vehicle->driver_id;
         $vehicle->save();
 
-        return redirect()->route('vehicles.index')->with('message', 'Vehicle updated successfully.');
+        return redirect()->route('vehicle.index')->with('message', 'Vehicle updated successfully.');
     }
 
     /**
@@ -110,11 +113,11 @@ class VehicleController extends Controller
     public function destroy(Vehicle $vehicle)
     {
         if (!$vehicle) {
-            return redirect()->route('vehicles.index')->with('message', 'Vehicle not found.');
+            return redirect()->route('vehicle.index')->with('message', 'Vehicle not found.');
         }
 
         $vehicle->delete();
 
-        return redirect()->route('vehicles.index')->with('message', 'Vehicle deleted successfully.');
+        return redirect()->route('vehicle.index')->with('message', 'Vehicle deleted successfully.');
     }
 }

@@ -20,6 +20,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'role',
         'password',
     ];
 
@@ -45,5 +47,10 @@ class User extends Authenticatable
     public function hasRole(string $role): bool
     {
         return $this->getAttribute('role') === $role;
+    }
+
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'driver_id');
     }
 }

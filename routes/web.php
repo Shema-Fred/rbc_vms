@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleRequestController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -15,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 
@@ -25,7 +28,8 @@ Route::group(['middleware' => 'auth'], function () {
         $user = Auth::user();
 
         if ($user->hasRole('driver')) {
-            return view('dashboard.driver');
+            $vehicles = $user->vehicles;
+            return view('dashboard.driver',compact('vehicles'));
         }
 
         if ($user->hasRole('staff')) {
@@ -37,7 +41,9 @@ Route::group(['middleware' => 'auth'], function () {
         }
     })->name('dashboard');
 
-    
+    Route::resource('user', UserController::class);
+    Route::resource('vehicle', VehicleController::class);
+    Route::resource('vehicleRequest', VehicleRequestController::class);
 });
 
 require __DIR__ . '/auth.php';
