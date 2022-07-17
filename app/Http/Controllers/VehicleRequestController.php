@@ -4,11 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use App\Models\VehicleRequest;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class VehicleRequestController extends Controller
 {
+
+    public function checkVehicleAvailability($vehicleRequest)
+    {
+        $now = Carbon::now();
+        $deadline = Carbon::parse($vehicleRequest->deadline);
+        if ($vehicleRequest->vehicle && $now->gt($deadline)) {
+            $vehicleRequest->vehicle_id = null;
+            $vehicleRequest->status = 'expired';
+            $vehicleRequest->save();
+        }
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -17,6 +30,10 @@ class VehicleRequestController extends Controller
     public function index()
     {
         $vehicleRequests = VehicleRequest::latest()->paginate(10);
+
+        foreach ($vehicleRequests as $vehicleRequest) {
+            $this->checkVehicleAvailability($vehicleRequest);
+        }
 
         return view('vehicleRequest.index', compact('vehicleRequests'));
     }
@@ -113,6 +130,20 @@ class VehicleRequestController extends Controller
             return redirect()->route('vehicleRequest.index')->with('message', 'You are not authorized to perform this action.');
         }
 
+
+        return redirect()->route('vehicleRequest.index')->with('message', 'Vehicle Request updated successfully.');
+    }
+
+    public function reportCompleted(Request $request, VehicleRequest $vehicleRequest)
+    {
+        $user = Auth::user();
+        if (!$user->hasRole('driver')) {
+            $vehicleRequest->status = 'expired';
+            $vehicleRequest->vehicle_id = null;
+            $vehicleRequest->save();
+        } else {
+            return redirect()->route('vehicleRequest.index')->with('message', 'You are not authorized to perform this action.');
+        }
 
         return redirect()->route('vehicleRequest.index')->with('message', 'Vehicle Request updated successfully.');
     }

@@ -45,9 +45,18 @@
             <td class="px-6 py-4 whitespace-nowrap text-capitalize">{{$vehicleRequest->destination ?? 'N/A'}}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{$vehicleRequest->deadline ?? 'N/A'}}</td>
             <td class="px-6 py-4 whitespace-nowrap text-capitalize">{{$vehicleRequest->status}}</td>
-            <td class="px-6 py-4 whitespace-nowrap flex justify-center ">
+            <td class="px-6 py-4 whitespace-nowrap flex justify-start ">
               @if (auth()->user()->hasRole('staff'))
               <a href="{{route('vehicleRequest.edit', [$vehicleRequest->id])}}" class="text-blue-500 mx-2">Edit</a>
+              @if($vehicleRequest->status != 'expired')
+              <form method="post" action="{{route('vehicleRequest.reportCompleted', [$vehicleRequest->id])}}"
+                id="reportForm{{$vehicleRequest->id}}">
+                @csrf
+                <button type="submit" class="text-red-500 mx-2"
+                  onclick="event.preventDefault(); if(confirm('Are you sure you want to mark this mission as completed?')) {document.getElementById('reportForm{{$vehicleRequest->id}}').submit();} else {return false;} ">Complete
+                  Mission</button>
+              </form>
+              @endif
               @endif
 
               @if (auth()->user()->hasRole('admin'))

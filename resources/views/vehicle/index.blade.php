@@ -27,12 +27,15 @@
         <thead class="bg-gray-50">
           <tr>
             <th style="width: 1px" class="text-left relative px-6 py-3">#</th>
-            <th class="text-left relative px-6 py-3">Name</th>
+            <th class="text-left relative px-6 py-3">Staff Names</th>
             <th class="text-left relative px-6 py-3">
-              Driver
+              Driver Names
             </th>
             <th class="text-left relative px-6 py-3">
-              Plate
+              Plate Number
+            </th>
+            <th class="text-left relative px-6 py-3">
+              Availability
             </th>
             <th class="text-left relative px-6 py-3"></th>
           </tr>
@@ -44,6 +47,7 @@
             <td class="px-6 py-4 whitespace-nowrap">{{$vehicle->name}}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{$vehicle->driver->name ?? 'N/A'}}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{$vehicle->plate}}</td>
+            <td class="px-6 py-4 whitespace-nowrap">{{$vehicle->vehicleRequests->count() == 0 ? 'Available' : 'Unavailable'}}</td>
             <td class="px-6 py-4 whitespace-nowrap flex justify-center ">
               <a href="{{route('vehicle.edit', [$vehicle->id])}}" class="text-blue-500 mx-2">Edit</a>
               <form method="post" action="{{route('vehicle.destroy', [$vehicle->id])}}" id="deleteForm{{$vehicle->id}}">

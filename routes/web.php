@@ -29,7 +29,7 @@ Route::group(['middleware' => 'auth'], function () {
 
         if ($user->hasRole('driver')) {
             $vehicles = $user->vehicles;
-            return view('dashboard.driver',compact('vehicles'));
+            return view('dashboard.driver', compact('vehicles'));
         }
 
         if ($user->hasRole('staff')) {
@@ -44,6 +44,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::resource('user', UserController::class);
     Route::resource('vehicle', VehicleController::class);
     Route::resource('vehicleRequest', VehicleRequestController::class);
+    Route::post('/vehicleRequest/reportCompleted/{vehicleRequest}', [VehicleRequestController::class, 'reportCompleted'])->name('vehicleRequest.reportCompleted');
 });
 
 require __DIR__ . '/auth.php';
