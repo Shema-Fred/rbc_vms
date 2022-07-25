@@ -16,6 +16,8 @@ class VehicleRequest extends Model
         'destination',
         'deadline',
         'status',
+        'reason',
+        'days'
     ];
 
     public function vehicle()
@@ -30,11 +32,11 @@ class VehicleRequest extends Model
 
     public function setDeadlineAttribute($value)
     {
-        $this->attributes['deadline'] = Carbon::parse($value)->format('Y-m-d H:i') ?: null;
+        $this->attributes['deadline'] = $value ? Carbon::parse($value)->format('Y-m-d H:i') : null;
     }
 
     public function getDeadlineAttribute($value)
     {
-        return Carbon::parse($value)->format('d-m-Y H:i');
+        return $value ? Carbon::parse($value)->format('d-m-Y H:i') : null;
     }
 }

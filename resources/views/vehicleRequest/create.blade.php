@@ -32,7 +32,7 @@
               Destination
             </label>
             <div class="mt-1 flex rounded-md shadow-sm">
-              <select name="destination"
+              <select name="destination" id="destination"
                 class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded sm:text-sm border-gray-300 @error('destination') border-red-500 @enderror"
                 placeholder="Destination">
                 <option value="" disabled selected>Select Destination</option>
@@ -41,6 +41,20 @@
               </select>
             </div>
             @error('destination')
+            <div class="text-red-600">{{$message}}</div>
+            @enderror
+          </div>
+
+          <div class="col-span-3 sm:col-span-2 hidden" id="days">
+            <label class="block text-sm font-medium text-gray-700">
+              Days
+            </label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+              <input type="number" min="1" max="10" name="days"
+                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded sm:text-sm border-gray-300 @error('days') border-red-500 @enderror"
+                placeholder="Required Days">
+            </div>
+            @error('days')
             <div class="text-red-600">{{$message}}</div>
             @enderror
           </div>
@@ -61,4 +75,17 @@
     </form>
 
   </div>
+  @section('scripts')
+  <script>
+    $(document).ready(function(){
+        $('#destination').on('change', function(){
+        if(this.value == 'field'){
+          $('#days').removeClass('hidden');
+        }else{
+          $('#days').addClass('hidden');
+        }
+      })
+    })
+  </script>
+  @endsection
 </x-app-layout>

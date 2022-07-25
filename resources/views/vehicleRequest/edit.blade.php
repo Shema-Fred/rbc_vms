@@ -33,7 +33,7 @@
               Destination
             </label>
             <div class="mt-1 flex rounded-md shadow-sm">
-              <select name="destination"
+              <select name="destination" id="destination"
                 class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded sm:text-sm border-gray-300 @error('destination') border-red-500 @enderror"
                 placeholder="Destination">
                 <option value="" disabled selected>Select Destination</option>
@@ -46,22 +46,43 @@
             @enderror
           </div>
 
-          @endif
-          @if (Auth::user()->hasRole('admin'))
-          <div class="col-span-3 sm:col-span-2">
+          <div class="col-span-3 sm:col-span-2 @if($vehicleRequest->destination == 'kigali') hidden @endif" id="days">
             <label class="block text-sm font-medium text-gray-700">
-              Deadline
+              Days
             </label>
             <div class="mt-1 flex rounded-md shadow-sm">
-              <input type="text" name="deadline" id="deadline" value="{{$vehicleRequest->deadline}}"
-                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded sm:text-sm border-gray-300 @error('deadline') border-red-500 @enderror"
-                placeholder="Deadline">
+              <input type="number" min="1" max="10" name="days" value="{{$vehicleRequest->days}}"
+                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded sm:text-sm border-gray-300 @error('days') border-red-500 @enderror"
+                placeholder="Required Days">
             </div>
-            @error('deadline')
+            @error('days')
             <div class="text-red-600">{{$message}}</div>
             @enderror
           </div>
 
+          @if($vehicleRequest->status == 'rejected' && $vehicleRequest->reason)
+          <div class="col-span-3 sm:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Rejection Reason
+            </label>
+            <div class="mt-1">
+              {{$vehicleRequest->reason}}
+            </div>
+          </div>
+          @endif
+          @endif
+
+          @if (Auth::user()->hasRole('admin'))
+          @if($vehicleRequest->destination == 'field')
+          <div class="col-span-3 sm:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Requested Days
+            </label>
+            <div class="mt-1">
+              {{$vehicleRequest->days}}
+            </div>
+          </div>
+          @endif
           <div class="col-span-3 sm:col-span-2">
             <label class="block text-sm font-medium text-gray-700">
               Vehicle
@@ -88,13 +109,34 @@
             @enderror
           </div>
 
+
+          {{-- driver_id field --}}
+          <div class="col-span-3 sm:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">
+              Driver
+            </label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+              <select name="driver_id"
+                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded sm:text-sm border-gray-300 @error('driver_id') border-red-500 @enderror">
+                <option value="" disabled selected>Select driver</option>
+                @foreach($drivers as $driver)
+                <option value="{{$driver->id}}" @selected($vehicleRequest->vehicle &&
+                  $vehicleRequest->vehicle->driver_id===$driver->id)>{{$driver->name}}</option>
+                @endforeach
+              </select>
+            </div>
+            @error('driver_id')
+            <div class="text-red-600">{{$message}}</div>
+            @enderror
+          </div>
+
           {{--status field--}}
           <div class="col-span-3 sm:col-span-2">
             <label class="block text-sm font-medium text-gray-700">
               Status
             </label>
             <div class="mt-1 flex rounded-md shadow-sm">
-              <select name="status"
+              <select name="status" id="status"
                 class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded sm:text-sm border-gray-300 @error('status') border-red-500 @enderror">
                 <option value="" disabled selected>Select Status</option>
                 <option value="pending" @selected($vehicleRequest->status==='pending')>Pending</option>
@@ -103,6 +145,19 @@
               </select>
             </div>
             @error('status')
+            <div class="text-red-600">{{$message}}</div>
+            @enderror
+          </div>
+          <div class="col-span-3 sm:col-span-2 @if($vehicleRequest->status != 'rejected') hidden @endif" id="reason">
+            <label class="block text-sm font-medium text-gray-700">
+              Rejection Reason
+            </label>
+            <div class="mt-1 flex rounded-md shadow-sm">
+              <textarea type="text" name="reason" rows="3"
+                class="focus:ring-indigo-500 focus:border-indigo-500 flex-1 block w-full rounded sm:text-sm border-gray-300 @error('reason') border-red-500 @enderror"
+                placeholder="Reason">{{$vehicleRequest->reason}}</textarea>
+            </div>
+            @error('reason')
             <div class="text-red-600">{{$message}}</div>
             @enderror
           </div>
@@ -126,12 +181,23 @@
 
   @section('scripts')
   <script>
-    var fp = flatpickr('#deadline', {
-      enableTime: true,
-      dateFormat: "d-m-Y H:i",
-      defaultDate: "{{$vehicleRequest->deadline ?? 'today'}}",
-      time_24hr: true,
-    });
+     $(document).ready(function(){
+      $('#status').on('change',function(){
+       if(this.value == 'rejected'){
+        $('#reason').removeClass('hidden');
+       }else{
+        $('#reason').addClass('hidden');
+       }
+      })
+
+      $('#destination').on('change', function(){
+        if(this.value == 'field'){
+          $('#days').removeClass('hidden');
+        }else{
+          $('#days').addClass('hidden');
+        }
+      })
+    })
   </script>
   @endsection
 </x-app-layout>

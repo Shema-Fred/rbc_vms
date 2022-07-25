@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleRequest;
 use Carbon\Carbon;
@@ -67,6 +68,7 @@ class VehicleRequestController extends Controller
         $vehicleRequest->user_id = $user->id;
         $vehicleRequest->description = $request->description;
         $vehicleRequest->destination = $request->destination;
+        $vehicleRequest->days = $request->days;
         $vehicleRequest->save();
 
         return redirect()->route('vehicleRequest.index')->with('message', 'Vehicle requested successfully.');
@@ -92,8 +94,9 @@ class VehicleRequestController extends Controller
     public function edit(VehicleRequest $vehicleRequest)
     {
         $vehicles = Vehicle::whereDoesntHave('vehicleRequests')->latest()->get();
+        $drivers = User::where('role', 'driver')->latest()->get();
 
-        return view('vehicleRequest.edit', compact('vehicleRequest', 'vehicles'));
+        return view('vehicleRequest.edit', compact('vehicleRequest', 'vehicles', 'drivers'));
     }
 
     /**
@@ -107,15 +110,31 @@ class VehicleRequestController extends Controller
     {
         $user = Auth::user();
         if ($user->hasRole('admin')) {
+            $deadline = null;
             $request->validate([
                 'vehicle_id' => ['sometimes', 'required', 'integer', 'exists:vehicles,id'],
                 'status' => ['required', 'string'],
-                'deadline' => ['required', 'date_format:d-m-Y H:i'],
             ]);
+            if ($request->status == 'approved') {
+                if ($vehicleRequest->destination == 'kigali') {
+                    $deadline = Carbon::now()->addHours(2);
+                } else {
+                    $deadline = Carbon::now()->addDays($vehicleRequest->days ?? 0);
+                }
+            }
             $vehicleRequest->vehicle_id = $request->vehicle_id ?? $vehicleRequest->vehicle_id ?? null;
-            $vehicleRequest->deadline = $request->deadline;
+            $vehicleRequest->deadline = $deadline;
+            $vehicleRequest->reason = $request->reason;
             $vehicleRequest->status = $request->status;
             $vehicleRequest->save();
+            $vehicle = $vehicleRequest->vehicle()->get()->first();
+            if ($request->vehicle_id && $request->driver_id) {
+                $vehicle->driver_id = $request->driver_id ?? $vehicle->driver_id;
+                $vehicle->save();
+            }
+            if ($request->status == 'rejected') {
+                $this->reportCompleted($request, $vehicleRequest);
+            }
         } else if ($user->hasRole('staff')) {
             $request->validate([
                 'destination' => ['required', 'string', 'max:255'],
@@ -123,6 +142,9 @@ class VehicleRequestController extends Controller
             ]);
 
             $vehicleRequest->user_id = $user->id;
+            $vehicleRequest->status = 'pending';
+            $vehicleRequest->deadline = null;
+            $vehicleRequest->days = $request->days;
             $vehicleRequest->description = $request->description;
             $vehicleRequest->destination = $request->destination;
             $vehicleRequest->save();
@@ -138,7 +160,7 @@ class VehicleRequestController extends Controller
     {
         $user = Auth::user();
         if (!$user->hasRole('driver')) {
-            $vehicleRequest->status = 'expired';
+            $vehicleRequest->status = $request->status ?? 'expired';
             $vehicleRequest->vehicle_id = null;
             $vehicleRequest->save();
         } else {

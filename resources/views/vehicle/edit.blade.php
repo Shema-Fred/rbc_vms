@@ -14,7 +14,7 @@
         <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
           <div class="col-span-3 sm:col-span-2">
             <label class="block text-sm font-medium text-gray-700">
-              Name
+              Vehicle Name
             </label>
             <div class="mt-1 flex rounded-md shadow-sm">
               <input type="text" name="name" value="{{$vehicle->name}}"
@@ -42,7 +42,7 @@
           </div>
 
           {{-- driver_id field --}}
-          <div class="col-span-3 sm:col-span-2">
+          {{-- <div class="col-span-3 sm:col-span-2">
             <label class="block text-sm font-medium text-gray-700">
               Driver
             </label>
@@ -58,7 +58,7 @@
             @error('driver_id')
             <div class="text-red-600">{{$message}}</div>
             @enderror
-          </div>
+          </div> --}}
 
 
         </div>
