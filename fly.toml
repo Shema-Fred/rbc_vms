@@ -13,7 +13,8 @@ console_command = "php /var/www/html/artisan tinker"
     PHP_VERSION = "8.1"
 
 [deploy]
- release_command = "php /var/www/html/artisan migrate --force"
+  strategy = "bluegreen"
+  release_command = "php /var/www/html/artisan migrate --force"
 
 [env]
   APP_ENV = "production"
